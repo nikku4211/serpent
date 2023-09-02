@@ -3,9 +3,12 @@ vars /serp_vars
     UF py = 10
     UF opx = 12
     UF opy = 10
+    U[64] psnpx
+    U[64] psnpy
     SF pvelx = 0
     SF pvely = 0
-    U plength = 1
+    U plength = 5
+    U plengthcounter = 5
     UF rx = 16
     UF ry = 15
     UF orx = 16
@@ -60,14 +63,22 @@ fn update_bkg()
     {PPUDATA}(1)
 
     //draw a blank space over the old snake head on the background
-    if opx.a != px.a || opy.a != py.a
-        ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
-        {PPUDATA}(0)
+    ppu_set_addr($2000+(UU(psnpy[0])<<5)+UU(psnpx[0]))
+    {PPUDATA}(0)
 
 fn move_player()
     opx = px
     opy = py
+
+    if plengthcounter > 0
+        plengthcounter -= 1
+    else
+        plengthcounter = plength
+
+    psnpx[plengthcounter] = px.a
+    psnpy[plengthcounter] = py.a
     
+    //move snake head horizontally
     if pads[0].held & BUTTON_LEFT
         pvelx = -0.1
         pvely = 0
@@ -75,6 +86,7 @@ fn move_player()
         pvelx = 0.1
         pvely = 0
     
+    //move snake head vertically
     if pads[0].held & BUTTON_UP
         pvely = -0.1
         pvelx = 0
@@ -82,9 +94,11 @@ fn move_player()
         pvely = 0.1
         pvelx = 0
     
+    //make sure snake is always moving
     px += pvelx
     py += pvely
 
+    //wrap snake around screen
     if py < 2
         py = 28
     else if py > 28
