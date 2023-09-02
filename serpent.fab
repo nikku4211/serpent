@@ -1,15 +1,15 @@
 vars /serp_vars
-    U px = 12
-    U py = 10
-    U opx = 12
-    U opy = 10
+    UF px = 12
+    UF py = 10
+    UF opx = 12
+    UF opy = 10
     SF pvelx = 0
     SF pvely = 0
     U plength = 1
-    U rx = 16
-    U ry = 15
-    U orx = 16
-    U ory = 15
+    UF rx = 16
+    UF ry = 15
+    UF orx = 16
+    UF ory = 15
     SF rvelx = 0
     SF rvely = 0
     U score = 0
@@ -27,6 +27,8 @@ nmi main_nmi()
 
     //turn rendering on
     {PPUMASK}(PPUMASK_ON | PPUMASK_NO_CLIP)
+
+    update_bkg()
 
     //reset scroll
     ppu_reset_scroll(0, 0)
@@ -49,29 +51,33 @@ mode main()
     while true
         update_pads()
         move_player()
-        update_bkg()
         nmi
 
 fn update_bkg()
-    ppu_reset_addr($2000)
-    ppu_set_addr($2000+UU(py<<5)+UU(px))
+    
+    ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
     {PPUDATA}(1)
-    ppu_set_addr($2000+UU(opy<<5)+UU(opx))
+    ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
     {PPUDATA}(0)
 
 fn move_player()
-    opx = px
-    opy = py
+    if opx.a != px.a || opy.a != py.a
+        opx = px
+        opy = py
     
     if pads[0].held & BUTTON_LEFT
         pvelx = -0.1
+        pvely = 0
     else if pads[0].held & BUTTON_RIGHT
         pvelx = 0.1
+        pvely = 0
     
     if pads[0].held & BUTTON_UP
         pvely = -0.1
+        pvelx = 0
     else if pads[0].held & BUTTON_DOWN
         pvely = 0.1
+        pvelx = 0
     
     px += pvelx
     py += pvely
