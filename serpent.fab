@@ -55,9 +55,12 @@ mode main()
 
 fn update_bkg()
     
+    //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
     {PPUDATA}(1)
-    if U(opx.a) != U(px.a) || U(opy.a) != U(py.a)
+
+    //draw a blank space over the old snake head on the background
+    if opx.a != px.a || opy.a != py.a
         ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
         {PPUDATA}(0)
 
