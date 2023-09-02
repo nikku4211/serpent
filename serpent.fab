@@ -1,0 +1,81 @@
+vars /serp_vars
+    U px = 12
+    U py = 10
+    U opx = 12
+    U opy = 10
+    SF pvelx = 0
+    SF pvely = 0
+    U plength = 1
+    U rx = 16
+    U ry = 15
+    U orx = 16
+    U ory = 15
+    SF rvelx = 0
+    SF rvely = 0
+    U score = 0
+
+fn load_level()
+    ppu_reset_addr($2000)
+    for UU i = 0; i < 960; i += 1
+        {PPUDATA}(0)
+    for U i = 0; i < 64; i += 1
+        {PPUDATA}(%00000000)
+
+nmi main_nmi()
+    //update oam and poll controller presses
+    ppu_upload_oam_poll_pads(0)
+
+    //turn rendering on
+    {PPUMASK}(PPUMASK_ON | PPUMASK_NO_CLIP)
+
+    //reset scroll
+    ppu_reset_scroll(0, 0)
+
+mode main()
+: nmi main_nmi
+    // upload palette
+    palette = example_palette
+    ppu_upload_palette()
+
+    // load the level
+    load_level()
+
+    // Clear the remainder of OAM
+    hide_oam(0)
+
+    // have NMI on every frame
+    {PPUCTRL}(PPUCTRL_NMI_ON)
+
+    while true
+        update_pads()
+        move_player()
+        update_bkg()
+        nmi
+
+fn update_bkg()
+    ppu_reset_addr($2000)
+    ppu_set_addr($2000+UU(py<<5)+UU(px))
+    {PPUDATA}(1)
+    ppu_set_addr($2000+UU(opy<<5)+UU(opx))
+    {PPUDATA}(0)
+
+fn move_player()
+    opx = px
+    opy = py
+    
+    if pads[0].held & BUTTON_LEFT
+        pvelx = -0.1
+    else if pads[0].held & BUTTON_RIGHT
+        pvelx = 0.1
+    
+    if pads[0].held & BUTTON_UP
+        pvely = -0.1
+    else if pads[0].held & BUTTON_DOWN
+        pvely = 0.1
+    
+    px += pvelx
+    py += pvely
+
+// Define the tileset (commonly called CHR):
+chrrom
+    file(fmt, "serchr.png")
