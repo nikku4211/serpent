@@ -57,13 +57,13 @@ fn update_bkg()
     
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
     {PPUDATA}(1)
-    ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
-    {PPUDATA}(0)
+    if U(opx.a) != U(px.a) || U(opy.a) != U(py.a)
+        ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
+        {PPUDATA}(0)
 
 fn move_player()
-    if opx.a != px.a || opy.a != py.a
-        opx = px
-        opy = py
+    opx = px
+    opy = py
     
     if pads[0].held & BUTTON_LEFT
         pvelx = -0.1
@@ -81,6 +81,16 @@ fn move_player()
     
     px += pvelx
     py += pvely
+
+    if py < 2
+        py = 28
+    else if py > 28
+        py = 2
+    
+    if px < 2
+        px = 30
+    else if px > 30
+        px = 2
 
 // Define the tileset (commonly called CHR):
 chrrom
