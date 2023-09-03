@@ -3,8 +3,10 @@ vars /serp_vars
     UF py = 10
     UF opx = 12
     UF opy = 10
-    U[64] psnpx
-    U[64] psnpy
+    U[256] psnpx
+    U[256] psnpy
+    U psnpxbi = 0
+    U psnpybi = 0
     SF pvelx = 0
     SF pvely = 0
     U plength = 5
@@ -63,36 +65,53 @@ fn update_bkg()
     {PPUDATA}(1)
 
     //draw a blank space over the old snake head on the background
-    ppu_set_addr($2000+(UU(psnpy[0])<<5)+UU(psnpx[0]))
+    ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
     {PPUDATA}(0)
 
 fn move_player()
+    
     opx = px
     opy = py
-
-    if plengthcounter > 0
-        plengthcounter -= 1
-    else
-        plengthcounter = plength
-
-    psnpx[plengthcounter] = px.a
-    psnpy[plengthcounter] = py.a
     
     //move snake head horizontally
     if pads[0].held & BUTTON_LEFT
         pvelx = -0.1
         pvely = 0
+        //store head position at turn
+        psnpx[psnpxbi] = px.a
+        psnpy[psnpybi] = py.a
+        //increment snake buffer index
+        psnpxbi += 1
+        psnpybi += 1
     else if pads[0].held & BUTTON_RIGHT
         pvelx = 0.1
         pvely = 0
+        //store head position at turn
+        psnpx[psnpxbi] = px.a
+        psnpy[psnpybi] = py.a
+        //increment snake buffer index
+        psnpxbi += 1
+        psnpybi += 1
     
     //move snake head vertically
     if pads[0].held & BUTTON_UP
         pvely = -0.1
         pvelx = 0
+        //store head position at turn
+        psnpx[psnpxbi] = px.a
+        psnpy[psnpybi] = py.a
+        //increment snake buffer index
+        psnpxbi += 1
+        psnpybi += 1
     else if pads[0].held & BUTTON_DOWN
         pvely = 0.1
         pvelx = 0
+        //store head position at turn
+        psnpx[psnpxbi] = px.a
+        psnpy[psnpybi] = py.a
+        //increment snake buffer index
+        psnpxbi += 1
+        psnpybi += 1
     
     //make sure snake is always moving
     px += pvelx
