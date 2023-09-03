@@ -116,6 +116,12 @@ fn move_player()
     //make sure snake is always moving
     px += pvelx
     py += pvely
+    //store head position at turn
+    psnpx[psnpxbi] = px.a
+    psnpy[psnpybi] = py.a
+    //increment snake buffer index
+    psnpxbi += 1
+    psnpybi += 1
 
     //wrap snake around screen
     if py < 2
