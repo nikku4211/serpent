@@ -59,12 +59,11 @@ mode main()
         nmi
 
 fn update_bkg()
-    
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
     {PPUDATA}(1)
 
-    //draw a blank space over the old snake head on the background
+    //draw a blank space over the snake tail on the background
     ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
     {PPUDATA}(0)
 
@@ -77,51 +76,21 @@ fn move_player()
     if pads[0].held & BUTTON_LEFT
         pvelx = -0.1
         pvely = 0
-        //store head position at turn
-        psnpx[psnpxbi] = px.a
-        psnpy[psnpybi] = py.a
-        //increment snake buffer index
-        psnpxbi += 1
-        psnpybi += 1
     else if pads[0].held & BUTTON_RIGHT
         pvelx = 0.1
         pvely = 0
-        //store head position at turn
-        psnpx[psnpxbi] = px.a
-        psnpy[psnpybi] = py.a
-        //increment snake buffer index
-        psnpxbi += 1
-        psnpybi += 1
     
     //move snake head vertically
     if pads[0].held & BUTTON_UP
         pvely = -0.1
         pvelx = 0
-        //store head position at turn
-        psnpx[psnpxbi] = px.a
-        psnpy[psnpybi] = py.a
-        //increment snake buffer index
-        psnpxbi += 1
-        psnpybi += 1
     else if pads[0].held & BUTTON_DOWN
         pvely = 0.1
         pvelx = 0
-        //store head position at turn
-        psnpx[psnpxbi] = px.a
-        psnpy[psnpybi] = py.a
-        //increment snake buffer index
-        psnpxbi += 1
-        psnpybi += 1
-    
+
     //make sure snake is always moving
     px += pvelx
     py += pvely
-    //store head position at turn
-    psnpx[psnpxbi] = px.a
-    psnpy[psnpybi] = py.a
-    //increment snake buffer index
-    psnpxbi += 1
-    psnpybi += 1
 
     //wrap snake around screen
     if py < 2
@@ -133,6 +102,14 @@ fn move_player()
         px = 30
     else if px > 30
         px = 2
+
+    if (px.a != opx.a) || (py.a != opy.a)
+        //store head position at turn
+        psnpx[psnpxbi] = px.a
+        psnpy[psnpybi] = py.a
+        //increment snake buffer index
+        psnpxbi += 1
+        psnpybi += 1
 
 // Define the tileset (commonly called CHR):
 chrrom
