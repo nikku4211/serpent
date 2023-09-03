@@ -26,6 +26,12 @@ fn load_level()
     for U i = 0; i < 64; i += 1
         {PPUDATA}(%00000000)
 
+fn init_arrays()
+    for U i = 0; i < 255; i += 1
+        psnpx[i] = 0
+    for U i = 0; i < 255; i += 1
+        psnpy[i] = 0
+
 nmi main_nmi()
     //update oam and poll controller presses
     ppu_upload_oam_poll_pads(0)
@@ -46,6 +52,8 @@ mode main()
 
     // load the level
     load_level()
+
+    init_arrays()
 
     // Clear the remainder of OAM
     hide_oam(0)
