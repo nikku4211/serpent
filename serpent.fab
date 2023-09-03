@@ -17,6 +17,7 @@ vars /serp_vars
     SF rvelx = 0
     SF rvely = 0
     U score = 0
+    Bool lost = false
 
 fn load_level()
     ppu_reset_addr($2000)
@@ -77,6 +78,7 @@ mode main()
         move_player()
         //move_rat()
         eat_check()
+        ouro_check()
         if plength == 64
             goto mode win()
             : preserves
@@ -102,8 +104,8 @@ mode win()
 fn update_bkg()
     
     //draw a black space over the old rat on the background
-    ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
-    {PPUDATA}(0)
+    //ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
+    //{PPUDATA}(0)
 
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
@@ -187,7 +189,17 @@ fn eat_check()
         set_rat()
 
 fn ouro_check()
+    for U i = psnpy[psnpybi-plength]; i < psnpy[psnpybi-4]; i += 1
+        for U j = psnpx[psnpxbi-plength]; j < psnpx[psnpxbi-4]; j += 1
+            if px.a == psnpx[j] && py.a == psnpy[i]
+                lost = true
     
+    if lost = true
+        goto mode lose()
+        : preserves
+
+mode lose()
+    while true
 
 // Define the tileset (commonly called CHR):
 chrrom
