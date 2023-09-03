@@ -10,7 +10,6 @@ vars /serp_vars
     SF pvelx = 0
     SF pvely = 0
     U plength = 5
-    U plengthcounter = 5
     UF rx = 16
     UF ry = 15
     UF orx = 16
@@ -65,6 +64,8 @@ mode main()
 
     init_arrays()
 
+    set_rat()
+
     // Clear the remainder of OAM
     hide_oam(0)
 
@@ -74,9 +75,36 @@ mode main()
     while true
         update_pads()
         move_player()
+        //move_rat()
+        eat_check()
+        if plength == 64
+            goto mode win()
+            : preserves
         nmi
 
+nmi win_nmi()
+    //update oam and poll controller presses
+    ppu_upload_oam_poll_pads(0)
+
+    //turn rendering on
+    {PPUMASK}(PPUMASK_ON | PPUMASK_NO_CLIP)
+
+    //reset scroll
+    ppu_reset_scroll(0, 0)
+
+mode win()
+: nmi win_nmi
+
+    load_level()
+
+    while true
+
 fn update_bkg()
+    
+    //draw a black space over the old rat on the background
+    ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
+    {PPUDATA}(0)
+
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
     {PPUDATA}(1)
@@ -85,26 +113,33 @@ fn update_bkg()
     ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
     {PPUDATA}(0)
 
+    //draw the rat on the background
+    ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
+    {PPUDATA}(3)
+
 fn move_player()
     
     opx = px
     opy = py
     
     //move snake head horizontally
-    if pads[0].held & BUTTON_LEFT
+    if pads[0].held & BUTTON_LEFT && pvelx <= 0
         pvelx = -0.1
         pvely = 0
-    else if pads[0].held & BUTTON_RIGHT
+    else if pads[0].held & BUTTON_RIGHT && pvelx >= 0
         pvelx = 0.1
         pvely = 0
-    
     //move snake head vertically
-    if pads[0].held & BUTTON_UP
+    else if pads[0].held & BUTTON_UP && pvely <= 0
         pvely = -0.1
         pvelx = 0
-    else if pads[0].held & BUTTON_DOWN
+    else if pads[0].held & BUTTON_DOWN && pvely >= 0
         pvely = 0.1
         pvelx = 0
+
+    if pads[0].held & BUTTON_SELECT
+        goto mode win()
+        : preserves
 
     //make sure snake is always moving
     px += pvelx
@@ -128,6 +163,31 @@ fn move_player()
         //increment snake buffer index
         psnpxbi += 1
         psnpybi += 1
+
+fn set_rat()
+    //set the old rat position
+    //orx = rx
+    //ory = ry
+
+    //put rat in random place
+    rx = randb(28)
+    ry = randb(26)
+
+    //in bounds
+    rx += 2
+    ry += 2
+
+fn move_rat()
+    //TBD
+
+fn eat_check()
+    if px.a == rx.a && py.a == ry.a
+        score += 1
+        plength += 1
+        set_rat()
+
+fn ouro_check()
+    
 
 // Define the tileset (commonly called CHR):
 chrrom
