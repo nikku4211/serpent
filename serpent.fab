@@ -27,10 +27,20 @@ fn load_level()
         {PPUDATA}(%00000000)
 
 fn init_arrays()
+    //clear the entire 256-byte array...
     for U i = 0; i < 255; i += 1
         psnpx[i] = 0
     for U i = 0; i < 255; i += 1
         psnpy[i] = 0
+    
+    //...even the 256th byte
+    psnpx[255] = 0
+    psnpy[255] = 0
+
+    psnpx[0] = px.a
+    psnpy[0] = py.a
+    psnpxbi = 1
+    psnpybi = 1
 
 nmi main_nmi()
     //update oam and poll controller presses
