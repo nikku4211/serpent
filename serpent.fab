@@ -80,7 +80,7 @@ mode main()
         //move_rat()
         eat_check()
         //ouro_check()
-        if score == 64
+        if score == 5
             goto mode win()
             : preserves
         if lost
@@ -100,10 +100,18 @@ nmi win_nmi()
 
 mode win()
 : nmi win_nmi
+    // turn NMI off
+    {PPUCTRL}(0)
+    //turn rendering off
+    {PPUMASK}(0)
 
     load_level()
 
+    // have NMI on every frame
+    {PPUCTRL}(PPUCTRL_NMI_ON)
+
     while true
+        nmi
 
 fn update_bkg()   
     //draw a black space over the old rat on the background
@@ -161,12 +169,12 @@ fn move_player()
 
     //wrap snake around screen
     if py < 2
-        py = 28
+        py = 27
     else if py > 28
         py = 2
     
     if px < 2
-        px = 30
+        px = 29
     else if px > 30
         px = 2
 
@@ -184,8 +192,8 @@ fn set_rat()
     //ory = ry
 
     //put rat in random place
-    rx = randb(28)
-    ry = randb(26)
+    rx = randb(27)
+    ry = randb(25)
 
     //in bounds
     rx += 2
@@ -207,9 +215,18 @@ fn ouro_check()
 mode lose()
 : nmi win_nmi
 
+    // turn NMI off
+    {PPUCTRL}(0)
+    //turn rendering off
+    {PPUMASK}(0)
+
     load_level()
 
+    // have NMI on every frame
+    {PPUCTRL}(PPUCTRL_NMI_ON)
+
     while true
+        nmi
 
 // Define the tileset (commonly called CHR):
 chrrom
