@@ -83,9 +83,9 @@ mode main()
         if score == 64
             goto mode win()
             : preserves
-        if lost = true
-        goto mode lose()
-        : preserves
+        if lost
+            goto mode lose()
+            : preserves
         nmi
 
 nmi win_nmi()
@@ -105,8 +105,7 @@ mode win()
 
     while true
 
-fn update_bkg()
-    
+fn update_bkg()   
     //draw a black space over the old rat on the background
     //ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
     //{PPUDATA}(0)
@@ -115,7 +114,8 @@ fn update_bkg()
     fence
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
     pleat = {PPUDATA}()
-    : employs
+    pleat = {PPUDATA}()
+    fence
 
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
@@ -199,7 +199,7 @@ fn eat_check()
         set_rat()
 
 fn ouro_check()
-    if pleat = 1
+    if pleat == 1 && (px.a != opx.a || py.a != opy.a)
         lost = true
 
 mode lose()
