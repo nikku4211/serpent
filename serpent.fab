@@ -79,7 +79,7 @@ mode main()
         move_player()
         //move_rat()
         eat_check()
-        ouro_check()
+        //ouro_check()
         if score == 64
             goto mode win()
             : preserves
@@ -116,6 +116,8 @@ fn update_bkg()
     pleat = {PPUDATA}()
     pleat = {PPUDATA}()
     fence
+
+    ouro_check()
 
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
@@ -203,6 +205,10 @@ fn ouro_check()
         lost = true
 
 mode lose()
+: nmi win_nmi
+
+    load_level()
+
     while true
 
 // Define the tileset (commonly called CHR):
