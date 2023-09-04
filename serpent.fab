@@ -3,6 +3,7 @@ vars /serp_vars
     UF py = 10
     UF opx = 12
     UF opy = 10
+    U pleat = 0
     U[256] psnpx
     U[256] psnpy
     U psnpxbi = 0
@@ -79,9 +80,12 @@ mode main()
         //move_rat()
         eat_check()
         ouro_check()
-        if plength == 64
+        if score == 64
             goto mode win()
             : preserves
+        if lost = true
+        goto mode lose()
+        : preserves
         nmi
 
 nmi win_nmi()
@@ -106,6 +110,12 @@ fn update_bkg()
     //draw a black space over the old rat on the background
     //ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
     //{PPUDATA}(0)
+
+    //read the snake head on the background
+    fence
+    ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
+    pleat = {PPUDATA}()
+    : employs
 
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
@@ -189,14 +199,8 @@ fn eat_check()
         set_rat()
 
 fn ouro_check()
-    for U i = psnpy[psnpybi-plength]; i < psnpy[psnpybi-4]; i += 1
-        for U j = psnpx[psnpxbi-plength]; j < psnpx[psnpxbi-4]; j += 1
-            if px.a == psnpx[j] && py.a == psnpy[i]
-                lost = true
-    
-    if lost = true
-        goto mode lose()
-        : preserves
+    if pleat = 1
+        lost = true
 
 mode lose()
     while true
