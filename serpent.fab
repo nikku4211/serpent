@@ -8,24 +8,30 @@ vars /serp_vars
     U[256] psnpy
     U psnpxbi = 0
     U psnpybi = 0
-    SF pvelx = 0
+    SF pvelx = 0.1
     SF pvely = 0
     U plength = 5
     UF rx = 16
     UF ry = 15
     UF orx = 16
     UF ory = 15
-    SF rvelx = 0
+    SF rvelx = 0.1
     SF rvely = 0
+    U rtele = 0
+    U ortele = 0
     U score = 0
     Bool lost = false
+
+data /serp_data
+    [] game_back_nt
+        file(raw, "gamebkg.nam")
 
 fn load_level()
     ppu_reset_addr($2000)
     for UU i = 0; i < 960; i += 1
-        {PPUDATA}(0)
-    for U i = 0; i < 64; i += 1
-        {PPUDATA}(%00000000)
+        {PPUDATA}(@game_back_nt{i})
+    for UU i = 0; i < 64; i += 1
+        {PPUDATA}(@game_back_nt{i+960})
 
 fn init_arrays()
     //clear the entire 256-byte array...
@@ -55,11 +61,16 @@ nmi main_nmi()
     //reset scroll
     ppu_reset_scroll(0, 0)
 
+    puf.process(PUF_DEFAULT)
+
 mode main()
 : nmi main_nmi
     // upload palette
     palette = example_palette
     ppu_upload_palette()
+
+    puf.init(system)
+    puf.play_track(puf_track_title)
 
     // load the level
     load_level()
@@ -77,10 +88,10 @@ mode main()
     while true
         update_pads()
         move_player()
-        //move_rat()
+        move_rat()
         eat_check()
-        //ouro_check()
-        if score == 5
+        
+        if score == 64
             goto mode win()
             : preserves
         if lost
@@ -114,9 +125,6 @@ mode win()
         nmi
 
 fn update_bkg()   
-    //draw a black space over the old rat on the background
-    //ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
-    //{PPUDATA}(0)
 
     //read the snake head on the background
     fence
@@ -125,7 +133,18 @@ fn update_bkg()
     pleat = {PPUDATA}()
     fence
 
+    //read the rat on the background
+    fence
+    ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
+    rtele = {PPUDATA}()
+    rtele = {PPUDATA}()
+    fence
+
     ouro_check()
+
+    //draw a black space over the old rat on the background
+    ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
+    {PPUDATA}(ortele)
 
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
@@ -139,23 +158,27 @@ fn update_bkg()
     ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
     {PPUDATA}(3)
 
+    ppu_set_addr($2096)
+    {PPUDATA}(u_to_dd(score)[1] + $30)
+    {PPUDATA}(u_to_dd(score)[0] + $30)
+
+    if (orx.a != rx.a || ory.a != ry.a)
+        ortele = rtele
+
 fn move_player()
     
-    opx = px
-    opy = py
-    
     //move snake head horizontally
-    if pads[0].held & BUTTON_LEFT && pvelx <= 0
+    if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && pvelx == 0 
         pvelx = -0.1
         pvely = 0
-    else if pads[0].held & BUTTON_RIGHT && pvelx >= 0
+    else if pads[0].held & BUTTON_DPAD == BUTTON_RIGHT && pvelx == 0
         pvelx = 0.1
         pvely = 0
     //move snake head vertically
-    else if pads[0].held & BUTTON_UP && pvely <= 0
+    else if pads[0].held & BUTTON_DPAD == BUTTON_UP && pvely == 0
         pvely = -0.1
         pvelx = 0
-    else if pads[0].held & BUTTON_DOWN && pvely >= 0
+    else if pads[0].held & BUTTON_DPAD == BUTTON_DOWN && pvely == 0
         pvely = 0.1
         pvelx = 0
 
@@ -163,15 +186,18 @@ fn move_player()
         goto mode win()
         : preserves
 
+    opx = px
+    opy = py
+
     //make sure snake is always moving
     px += pvelx
     py += pvely
 
     //wrap snake around screen
-    if py < 2
-        py = 27
-    else if py > 28
-        py = 2
+    if py < 6
+        py = 25
+    else if py > 26
+        py = 6
     
     if px < 2
         px = 29
@@ -193,14 +219,40 @@ fn set_rat()
 
     //put rat in random place
     rx = randb(27)
-    ry = randb(25)
+    ry = randb(19)
 
     //in bounds
     rx += 2
-    ry += 2
+    ry += 6
+
+    if rtele = 1
+        //put rat in random place
+        rx = randb(27)
+        ry = randb(19)
+
+        //in bounds
+        rx += 2
+        ry += 6
+        
 
 fn move_rat()
-    //TBD
+    orx = rx
+    ory = ry
+    
+    //rat is always moving
+    rx += rvelx
+    ry += rvely
+
+    //wrap rat around screen
+    if ry < 6
+        ry = 25
+    else if ry > 26
+        ry = 6
+    
+    if rx < 2
+        rx = 29
+    else if rx > 30
+        rx = 2
 
 fn eat_check()
     if px.a == rx.a && py.a == ry.a
@@ -231,3 +283,6 @@ mode lose()
 // Define the tileset (commonly called CHR):
 chrrom
     file(fmt, "serchr.png")
+
+audio(puf1_music, "music.txt")
+audio(puf1_sfx)
