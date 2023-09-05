@@ -85,6 +85,8 @@ mode main()
     // have NMI on every frame
     {PPUCTRL}(PPUCTRL_NMI_ON)
 
+    puf.play_sfx(0)
+
     while true
         update_pads()
         move_player()
@@ -108,6 +110,8 @@ nmi win_nmi()
 
     //reset scroll
     ppu_reset_scroll(0, 0)
+    
+    puf.process(PUF_DEFAULT)
 
 mode win()
 : nmi win_nmi
@@ -258,10 +262,12 @@ fn eat_check()
     if px.a == rx.a && py.a == ry.a
         score += 1
         plength += 1
+        puf.play_sfx(1)
         set_rat()
 
 fn ouro_check()
     if pleat == 1 && (px.a != opx.a || py.a != opy.a)
+        puf.play_sfx(2)
         lost = true
 
 mode lose()
@@ -285,4 +291,4 @@ chrrom
     file(fmt, "serchr.png")
 
 audio(puf1_music, "music.txt")
-audio(puf1_sfx)
+audio(puf1_sfx, "sfx.txt", "sfx.nsf")
