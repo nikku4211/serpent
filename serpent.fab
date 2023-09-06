@@ -27,20 +27,28 @@ data /serp_data
         file(raw, "gamebkg.nam")
     [] title_back_nt
         file(raw, "title.nam")
+    [] win_back_nt
+        file(raw, "win.nam")
+    [] lose_back_nt
+        file(raw, "lose.map")
 
-fn load_level()
+fn load_nametable(AA nametable)
     ppu_reset_addr($2000)
     for UU i = 0; i < 960; i += 1
-        {PPUDATA}(@game_back_nt{i})
+        {PPUDATA}(nametable[i])
     for UU i = 0; i < 64; i += 1
-        {PPUDATA}(@game_back_nt{i+960})
+        {PPUDATA}(nametable[i+960])
 
-fn load_title()
+fn load_nametable_tall(AA nametable)
     ppu_reset_addr($2000)
     for UU i = 0; i < 960; i += 1
-        {PPUDATA}(@title_back_nt{i})
+        {PPUDATA}(nametable[i])
     for UU i = 0; i < 64; i += 1
-        {PPUDATA}(@title_back_nt{i+960})
+        {PPUDATA}(nametable[i+960])
+    for UU i = 0; i < 960; i += 1
+        {PPUDATA}(nametable[i+1024])
+    for UU i = 0; i < 64; i += 1
+        {PPUDATA}(nametable[i+1984])
 
 fn init_arrays()
     //clear the entire 256-byte array...
@@ -83,7 +91,7 @@ mode game()
     puf.play_track(puf_track_title)
 
     // load the level
-    load_level()
+    load_nametable(@game_back_nt)
 
     init_arrays()
 
@@ -127,12 +135,14 @@ mode win()
     //turn rendering off
     {PPUMASK}(0)
 
-    load_level()
+    load_nametable(@win_back_nt)
 
     // have NMI on every frame
     {PPUCTRL}(PPUCTRL_NMI_ON)
 
     while true
+        update_pads()
+        pads_menu()
         nmi
 
 fn update_bkg()   
@@ -294,12 +304,14 @@ mode lose()
     //turn rendering off
     {PPUMASK}(0)
 
-    load_level()
+    load_nametable_tall(@lose_back_nt)
 
     // have NMI on every frame
     {PPUCTRL}(PPUCTRL_NMI_ON)
 
     while true
+        update_pads()
+        pads_menu()
         nmi
 
 mode main()
@@ -313,7 +325,9 @@ mode main()
     palette = example_palette
     ppu_upload_palette()
 
-    load_title()
+    load_nametable(@title_back_nt)
+
+    init_arrays()
 
     // Clear the remainder of OAM
     hide_oam(0)
@@ -325,13 +339,14 @@ mode main()
     puf.play_track(puf_track_title)
 
     while true
-        update_pads_menu()
+        update_pads()
+        pads_menu()
         nmi
 
-fn update_pads_menu()
+fn pads_menu()
     if pads[0].held & BUTTON_START
         goto mode game()
-        : preserves
+        : preserves /serp_vars
 
 
 // Define the tileset (commonly called CHR):
