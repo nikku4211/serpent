@@ -93,7 +93,7 @@ mode main()
         move_rat()
         eat_check()
         
-        if score == 64
+        if score == 20
             goto mode win()
             : preserves
         if lost
@@ -229,7 +229,7 @@ fn set_rat()
     rx += 2
     ry += 6
 
-    if rtele = 1
+    if rtele == 1
         //put rat in random place
         rx = randb(27)
         ry = randb(19)
@@ -243,6 +243,9 @@ fn move_rat()
     orx = rx
     ory = ry
     
+    rvelx = SF(pvelx * (SF(score+1)>>5))
+    rvely = SF(pvely * (SF(score+1)>>5))
+
     //rat is always moving
     rx += rvelx
     ry += rvely
@@ -257,6 +260,12 @@ fn move_rat()
         rx = 29
     else if rx > 30
         rx = 2
+    
+    if rtele == 1
+        score += 1
+        plength += 1
+        puf.play_sfx(1)
+        set_rat()
 
 fn eat_check()
     if px.a == rx.a && py.a == ry.a
