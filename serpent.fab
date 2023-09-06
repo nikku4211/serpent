@@ -25,6 +25,8 @@ vars /serp_vars
 data /serp_data
     [] game_back_nt
         file(raw, "gamebkg.nam")
+    [] title_back_nt
+        file(raw, "title.nam")
 
 fn load_level()
     ppu_reset_addr($2000)
@@ -32,6 +34,13 @@ fn load_level()
         {PPUDATA}(@game_back_nt{i})
     for UU i = 0; i < 64; i += 1
         {PPUDATA}(@game_back_nt{i+960})
+
+fn load_title()
+    ppu_reset_addr($2000)
+    for UU i = 0; i < 960; i += 1
+        {PPUDATA}(@title_back_nt{i})
+    for UU i = 0; i < 64; i += 1
+        {PPUDATA}(@title_back_nt{i+960})
 
 fn init_arrays()
     //clear the entire 256-byte array...
@@ -63,13 +72,14 @@ nmi main_nmi()
 
     puf.process(PUF_DEFAULT)
 
-mode main()
+mode game()
 : nmi main_nmi
-    // upload palette
-    palette = example_palette
-    ppu_upload_palette()
+    
+    // turn NMI off
+    {PPUCTRL}(0)
+    //turn rendering off
+    {PPUMASK}(0)
 
-    puf.init(system)
     puf.play_track(puf_track_title)
 
     // load the level
@@ -78,9 +88,6 @@ mode main()
     init_arrays()
 
     set_rat()
-
-    // Clear the remainder of OAM
-    hide_oam(0)
 
     // have NMI on every frame
     {PPUCTRL}(PPUCTRL_NMI_ON)
@@ -294,6 +301,38 @@ mode lose()
 
     while true
         nmi
+
+mode main()
+: nmi win_nmi
+    // turn NMI off
+    {PPUCTRL}(0)
+    //turn rendering off
+    {PPUMASK}(0)
+
+    // upload palette
+    palette = example_palette
+    ppu_upload_palette()
+
+    load_title()
+
+    // Clear the remainder of OAM
+    hide_oam(0)
+
+    // have NMI on every frame
+    {PPUCTRL}(PPUCTRL_NMI_ON)
+
+    puf.init(system)
+    puf.play_track(puf_track_title)
+
+    while true
+        update_pads_menu()
+        nmi
+
+fn update_pads_menu()
+    if pads[0].held & BUTTON_START
+        goto mode game()
+        : preserves
+
 
 // Define the tileset (commonly called CHR):
 chrrom
