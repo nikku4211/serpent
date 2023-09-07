@@ -34,6 +34,8 @@ vars /serp_vars
     U shame_counter = 120
     U shame_scroll = 0
     UU wintro_counter = 384
+    U chr_anim_counter = 12
+    U chr_frame = 0
 
 data /serp_data
     [] game_back_nt
@@ -125,6 +127,20 @@ nmi main_nmi()
 
     //reset scroll
     ppu_reset_scroll(0, 0)
+
+    if chr_anim_counter > 0
+        chr_anim_counter -= 1
+    else if chr_anim_counter == 0
+        switch chr_frame
+            case 0
+                {PPUCTRL}(PPUCTRL_NMI_ON)
+                chr_frame = 1
+                break
+            case 1
+                {PPUCTRL}(PPUCTRL_NMI_ON | PPUCTRL_BG_PT_1000)
+                chr_frame = 0
+                
+        chr_anim_counter = 12
 
     puf.process(PUF_DEFAULT)
 
@@ -405,7 +421,7 @@ fn eat_check()
         set_rat()
 
 fn ouro_check()
-    if pleat == 1 && (px.a != opx.a || py.a != opy.a)
+    if ((pleat >= 4 && pleat <= 9) || (pleat >= 17 && pleat <= 25)) && (px.a != opx.a || py.a != opy.a)
         puf.play_sfx(2)
         lost = true
 
