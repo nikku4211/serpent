@@ -10,11 +10,21 @@ vars /serp_vars
     U psnpybi = 0
     SF pvelx = 0.1
     SF pvely = 0
+    SF opvelx = 0.1
+    SF opvely = 0
     U plength = 5
+    U pheadt = 8
+    U pbodyt = 7
+    U ptailt = 5
+    U pcornt = 7
+    U optailt_counter = 7
+    U optailt = 5
+    Bool pturn = false
     UF rx = 16
     UF ry = 15
     UF orx = 16
     UF ory = 15
+    U rt = 11
     SF rvelx = 0.1
     SF rvely = 0
     U rtele = 0
@@ -83,11 +93,21 @@ fn init_game_vars()
     psnpybi = 0
     pvelx = 0.1
     pvely = 0
+    opvelx = 0.1
+    opvely = 0
     plength = 5
+    pheadt = 8
+    pbodyt = 7
+    ptailt = 5
+    pcornt = 7
+    optailt_counter = 7
+    optailt = 5
+    pturn = false
     rx = 16
     ry = 15
     orx = 16
     ory = 15
+    rt = 11
     rvelx = 0.1
     rvely = 0
     rtele = 0
@@ -205,17 +225,30 @@ fn update_bkg()
     ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
     {PPUDATA}(ortele)
 
+    //draw the snake body on the background
+    ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
+    {PPUDATA}(pbodyt)
+
+    //draw the snake corner on the background if turn
+    if pturn
+        ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
+        {PPUDATA}(pcornt)
+
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
-    {PPUDATA}(1)
+    {PPUDATA}(pheadt)
 
     //draw a blank space over the snake tail on the background
     ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
     {PPUDATA}(0)
 
+    //draw the snake tail on the background
+    ppu_set_addr($2000+(UU(psnpy[psnpybi-(plength-1)])<<5)+UU(psnpx[psnpxbi-(plength-1)]))
+    {PPUDATA}(optailt)
+
     //draw the rat on the background
     ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
-    {PPUDATA}(3)
+    {PPUDATA}(rt)
 
     ppu_set_addr($2096)
     {PPUDATA}(u_to_dd(score)[1] + $30)
@@ -226,20 +259,39 @@ fn update_bkg()
 
 fn move_player()
     
+    if optailt_counter == 0
+        optailt = ptailt
+        optailt_counter = plength+2
+
+    opvelx = pvelx
+    opvely = pvely
+
     //move snake head horizontally
     if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && pvelx == 0 
         pvelx = -0.1
         pvely = 0
+        pheadt = 6
+        pbodyt = 7
+        ptailt = 9
     else if pads[0].held & BUTTON_DPAD == BUTTON_RIGHT && pvelx == 0
         pvelx = 0.1
         pvely = 0
+        pheadt = 8
+        pbodyt = 7
+        ptailt = 5
     //move snake head vertically
     else if pads[0].held & BUTTON_DPAD == BUTTON_UP && pvely == 0
         pvely = -0.1
         pvelx = 0
+        pheadt = 20
+        pbodyt = 19
+        ptailt = 17
     else if pads[0].held & BUTTON_DPAD == BUTTON_DOWN && pvely == 0
         pvely = 0.1
         pvelx = 0
+        pheadt = 18
+        pbodyt = 19
+        ptailt = 4
 
     if pads[0].held & BUTTON_SELECT
         goto mode win()
@@ -264,12 +316,26 @@ fn move_player()
         px = 2
 
     if (px.a != opx.a) || (py.a != opy.a)
+        if optailt_counter > 0
+            optailt_counter -= 1
         //store head position at turn
         psnpx[psnpxbi] = px.a
         psnpy[psnpybi] = py.a
         //increment snake buffer index
         psnpxbi += 1
         psnpybi += 1
+        if pvelx != opvelx || pvely != opvely
+            pturn = true
+            if opvelx > 0 && pvely > 0
+                pcornt = 22
+            else if opvelx > 0 && pvely < 0
+                pcornt = 24
+            else if opvelx < 0 && pvely > 0
+                pcornt = 21
+            else if opvelx < 0 && pvely < 0
+                pcornt = 23
+        else
+            pturn = false
 
 fn set_rat()
     //set the old rat position
@@ -300,6 +366,15 @@ fn move_rat()
     
     rvelx = SF(pvelx * (SF(score+1)>>5))
     rvely = SF(pvely * (SF(score+1)>>5))
+
+    if rvelx < 0
+        rt = 10
+    else if rvelx > 0
+        rt = 11
+    else if rvely > 0
+        rt = 26
+    else if rvely < 0
+        rt = 27
 
     //rat is always moving
     rx += rvelx
