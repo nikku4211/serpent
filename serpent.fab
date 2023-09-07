@@ -23,6 +23,7 @@ vars /serp_vars
     Bool lost = false
     U shame_counter = 120
     U shame_scroll = 0
+    UU wintro_counter = 384
 
 data /serp_data
     [] game_back_nt
@@ -166,12 +167,20 @@ mode win()
 
     load_nametable(@win_back_nt)
 
+    puf.play_track(puf_track_wintro)
+
     // have NMI on every frame
     {PPUCTRL}(PPUCTRL_NMI_ON)
 
     while true
         update_pads()
         pads_menu()
+        if wintro_counter > 0 && wintro_counter < 385
+            wintro_counter -= 1
+        if wintro_counter == 0
+            wintro_counter = 385
+            puf.play_track(puf_track_win)
+
         nmi
 
 fn update_bkg()   
