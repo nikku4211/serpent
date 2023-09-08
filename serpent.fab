@@ -8,15 +8,16 @@ vars /serp_vars
     U[256] psnpy
     U psnpxbi = 0
     U psnpybi = 0
-    SF pvelx = 0.1
-    SF pvely = 0
-    SF opvelx = 0.1
-    SF opvely = 0
+    U pdir = 1
+    U opdir = 1
+    ct SF[4] pvelx_table = SF[4](0, 0.1, 0, -0.1)
+    ct SF[4] pvely_table = SF[4](0.1, 0, -0.1, 0)
     U plength = 5
     U pheadt = 8
     U pbodyt = 7
     U ptailt = 5
     U pcornt = 7
+    ct U[16] ptile_table = U[16](4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1, 1)
     U optailt_counter = 7
     U optailt = 5
     Bool pturn = false
@@ -24,9 +25,11 @@ vars /serp_vars
     UF ry = 15
     UF orx = 16
     UF ory = 15
-    U rt = 11
-    SF rvelx = 0.1
-    SF rvely = 0
+    ct U[4] rtile_table = U[4](20, 19, 21, 18)
+    ct SF[4] rvelx_table = SF[4](0, 0.1, 0, -0.1)
+    ct SF[4] rvely_table = SF[4](0.1, 0, -0.1, 0)
+    U rdir = 3
+    SF rvmul = 1
     U rtele = 0
     U ortele = 0
     U score = 0
@@ -91,17 +94,18 @@ fn init_game_vars()
     opx = 12
     opy = 10
     pleat = 0
+    
     psnpxbi = 0
     psnpybi = 0
-    pvelx = 0.1
-    pvely = 0
-    opvelx = 0.1
-    opvely = 0
+    pdir = 1
+    opdir = 1
+    
     plength = 5
     pheadt = 8
     pbodyt = 7
     ptailt = 5
     pcornt = 7
+    
     optailt_counter = 7
     optailt = 5
     pturn = false
@@ -109,9 +113,9 @@ fn init_game_vars()
     ry = 15
     orx = 16
     ory = 15
-    rt = 11
-    rvelx = 0.1
-    rvely = 0
+    
+    rdir = 3
+    rvmul = 1
     rtele = 0
     ortele = 0
     score = 0
@@ -243,16 +247,16 @@ fn update_bkg()
 
     //draw the snake body on the background
     ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
-    {PPUDATA}(pbodyt)
+    {PPUDATA}(ptile_table[pbodyt])
 
     //draw the snake corner on the background if turn
     if pturn
         ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
-        {PPUDATA}(pcornt)
+        {PPUDATA}(ptile_table[pcornt])
 
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
-    {PPUDATA}(pheadt)
+    {PPUDATA}(ptile_table[pheadt])
 
     //draw a blank space over the snake tail on the background
     ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
@@ -260,11 +264,11 @@ fn update_bkg()
 
     //draw the snake tail on the background
     ppu_set_addr($2000+(UU(psnpy[psnpybi-(plength-1)])<<5)+UU(psnpx[psnpxbi-(plength-1)]))
-    {PPUDATA}(optailt)
+    {PPUDATA}(ptile_table[optailt])
 
     //draw the rat on the background
     ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
-    {PPUDATA}(rt)
+    {PPUDATA}(rtile_table[rdir])
 
     ppu_set_addr($2096)
     {PPUDATA}(u_to_dd(score)[1] + $30)
@@ -279,35 +283,32 @@ fn move_player()
         optailt = ptailt
         optailt_counter = plength+2
 
-    opvelx = pvelx
-    opvely = pvely
+    opdir = pdir
+
+    //snake tiles: (4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1, 1)
 
     //move snake head horizontally
-    if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && pvelx == 0 
-        pvelx = -0.1
-        pvely = 0
-        pheadt = 6
-        pbodyt = 7
-        ptailt = 9
-    else if pads[0].held & BUTTON_DPAD == BUTTON_RIGHT && pvelx == 0
-        pvelx = 0.1
-        pvely = 0
-        pheadt = 8
-        pbodyt = 7
+    if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && pdir == 0 || pdir == 2
+        pdir = 3
+        pheadt = 2
+        pbodyt = 3
         ptailt = 5
+    else if pads[0].held & BUTTON_DPAD == BUTTON_RIGHT && pdir == 0 || pdir == 2
+        pdir = 1
+        pheadt = 4
+        pbodyt = 3
+        ptailt = 1
     //move snake head vertically
-    else if pads[0].held & BUTTON_DPAD == BUTTON_UP && pvely == 0
-        pvely = -0.1
-        pvelx = 0
-        pheadt = 20
-        pbodyt = 19
-        ptailt = 17
-    else if pads[0].held & BUTTON_DPAD == BUTTON_DOWN && pvely == 0
-        pvely = 0.1
-        pvelx = 0
-        pheadt = 18
-        pbodyt = 19
-        ptailt = 4
+    else if pads[0].held & BUTTON_DPAD == BUTTON_UP && pdir == 1 || pdir == 3
+        pdir = 2
+        pheadt = 9
+        pbodyt = 8
+        ptailt = 6
+    else if pads[0].held & BUTTON_DPAD == BUTTON_DOWN && pdir == 1 || pdir == 3
+        pdir = 0
+        pheadt = 7
+        pbodyt = 8
+        ptailt = 0
 
     if pads[0].held & BUTTON_SELECT
         goto mode win()
@@ -317,8 +318,8 @@ fn move_player()
     opy = py
 
     //make sure snake is always moving
-    px += pvelx
-    py += pvely
+    px += pvelx_table[pdir]
+    py += pvely_table[pdir]
 
     //wrap snake around screen
     if py < 6
@@ -340,15 +341,15 @@ fn move_player()
         //increment snake buffer index
         psnpxbi += 1
         psnpybi += 1
-        if pvelx != opvelx || pvely != opvely
+        if pdir != opdir
             pturn = true
-            if opvelx > 0 && pvely > 0
+            if (opdir == 3 && pdir == 0) || (opdir == 0 && pdir == 3)
                 pcornt = 22
-            else if opvelx > 0 && pvely < 0
+            else if (opdir == 3 && pdir == 2) || (opdir == 2 && pdir == 3)
                 pcornt = 24
-            else if opvelx < 0 && pvely > 0
+            else if (opdir == 1 && pdir == 0) || (opdir == 0 && pdir == 1)
                 pcornt = 21
-            else if opvelx < 0 && pvely < 0
+            else if (opdir == 1 && pdir == 2) || (opdir == 2 && pdir == 1)
                 pcornt = 23
         else
             pturn = false
@@ -380,21 +381,11 @@ fn move_rat()
     orx = rx
     ory = ry
     
-    rvelx = SF(pvelx * (SF(score+1)>>5))
-    rvely = SF(pvely * (SF(score+1)>>5))
-
-    if rvelx < 0
-        rt = 10
-    else if rvelx > 0
-        rt = 11
-    else if rvely > 0
-        rt = 26
-    else if rvely < 0
-        rt = 27
+    rvmul = (SF(score+1)>>5)
 
     //rat is always moving
-    rx += rvelx
-    ry += rvely
+    rx += rvelx_table[rdir]
+    ry += rvely_table[rdir]
 
     //wrap rat around screen
     if ry < 6
@@ -421,7 +412,7 @@ fn eat_check()
         set_rat()
 
 fn ouro_check()
-    if ((pleat >= 4 && pleat <= 9) || (pleat >= 17 && pleat <= 25)) && (px.a != opx.a || py.a != opy.a)
+    if (pleat <= 17 && pleat >= 4) && (px.a != opx.a || py.a != opy.a)
         puf.play_sfx(2)
         lost = true
 
