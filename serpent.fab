@@ -1,6 +1,10 @@
 ct SF[4] pvelx_table = SF[4](0, 0.1, 0, -0.1)
 ct SF[4] pvely_table = SF[4](0.1, 0, -0.1, 0)
-ct U[16] ptile_table = U[16](4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1, 1)
+//                          (downdown, downright, downup, downleft,
+//                          rightdown, rightright, rightup, rightleft,
+//                          updown, upright, upup, upleft,
+//                          leftdown, leftright, leftup, leftleft)
+ct U[16] ptile_table = U[16](12, 16, 12, 17, 15, 7, 17, 7, 12, 14, 12, 15, 14, 7, 17, 7)
 ct U[4] rtile_table = U[4](20, 19, 21, 18)
 ct SF[4] rvelx_table = SF[4](0, 0.1, 0, -0.1)
 ct SF[4] rvely_table = SF[4](0.1, 0, -0.1, 0)
@@ -250,14 +254,9 @@ fn update_bkg()
     ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
     {PPUDATA}(ptile_table[pbodyt])
 
-    //draw the snake corner on the background if turn
-    if pturn
-        ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
-        {PPUDATA}(ptile_table[pcornt])
-
     //draw the snake head on the background
     ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
-    {PPUDATA}(ptile_table[pheadt])
+    {PPUDATA}(pheadt)
 
     //draw a blank space over the snake tail on the background
     ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
@@ -265,7 +264,7 @@ fn update_bkg()
 
     //draw the snake tail on the background
     ppu_set_addr($2000+(UU(psnpy[psnpybi-(plength-1)])<<5)+UU(psnpx[psnpxbi-(plength-1)]))
-    {PPUDATA}(ptile_table[optailt])
+    {PPUDATA}(optailt)
 
     //draw the rat on the background
     ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
@@ -286,34 +285,30 @@ fn move_player()
 
     opdir = pdir
 
-    //snake tiles: (4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1, 1)
-
     //move snake head horizontally
     if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && (pdir == 0 || pdir == 2)
         pdir = 3
-        pheadt = 2
-        pbodyt = 3
-        ptailt = 5
+        pheadt = 6
+        ptailt = 9
     else if pads[0].held & BUTTON_DPAD == BUTTON_RIGHT && (pdir == 0 || pdir == 2)
         pdir = 1
-        pheadt = 4
-        pbodyt = 3
-        ptailt = 1
+        pheadt = 8
+        ptailt = 5
     //move snake head vertically
     else if pads[0].held & BUTTON_DPAD == BUTTON_UP && (pdir == 1 || pdir == 3)
         pdir = 2
-        pheadt = 9
-        pbodyt = 8
-        ptailt = 6
+        pheadt = 13
+        ptailt = 10
     else if pads[0].held & BUTTON_DPAD == BUTTON_DOWN && (pdir == 1 || pdir == 3)
         pdir = 0
-        pheadt = 7
-        pbodyt = 8
-        ptailt = 0
+        pheadt = 11
+        ptailt = 4
 
     if pads[0].held & BUTTON_SELECT
         goto mode win()
         : preserves
+
+    pbodyt = (opdir<<2)+pdir
 
     opx = px
     opy = py
