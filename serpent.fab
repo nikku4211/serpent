@@ -1,3 +1,10 @@
+ct SF[4] pvelx_table = SF[4](0, 0.1, 0, -0.1)
+ct SF[4] pvely_table = SF[4](0.1, 0, -0.1, 0)
+ct U[16] ptile_table = U[16](4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1, 1)
+ct U[4] rtile_table = U[4](20, 19, 21, 18)
+ct SF[4] rvelx_table = SF[4](0, 0.1, 0, -0.1)
+ct SF[4] rvely_table = SF[4](0.1, 0, -0.1, 0)
+
 vars /serp_vars
     UF px = 12
     UF py = 10
@@ -10,14 +17,11 @@ vars /serp_vars
     U psnpybi = 0
     U pdir = 1
     U opdir = 1
-    ct SF[4] pvelx_table = SF[4](0, 0.1, 0, -0.1)
-    ct SF[4] pvely_table = SF[4](0.1, 0, -0.1, 0)
     U plength = 5
-    U pheadt = 8
-    U pbodyt = 7
-    U ptailt = 5
-    U pcornt = 7
-    ct U[16] ptile_table = U[16](4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1, 1)
+    U pheadt = 4
+    U pbodyt = 3
+    U ptailt = 1
+    U pcornt = 4
     U optailt_counter = 7
     U optailt = 5
     Bool pturn = false
@@ -25,9 +29,6 @@ vars /serp_vars
     UF ry = 15
     UF orx = 16
     UF ory = 15
-    ct U[4] rtile_table = U[4](20, 19, 21, 18)
-    ct SF[4] rvelx_table = SF[4](0, 0.1, 0, -0.1)
-    ct SF[4] rvely_table = SF[4](0.1, 0, -0.1, 0)
     U rdir = 3
     SF rvmul = 1
     U rtele = 0
@@ -288,23 +289,23 @@ fn move_player()
     //snake tiles: (4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 1, 1)
 
     //move snake head horizontally
-    if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && pdir == 0 || pdir == 2
+    if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && (pdir == 0 || pdir == 2)
         pdir = 3
         pheadt = 2
         pbodyt = 3
         ptailt = 5
-    else if pads[0].held & BUTTON_DPAD == BUTTON_RIGHT && pdir == 0 || pdir == 2
+    else if pads[0].held & BUTTON_DPAD == BUTTON_RIGHT && (pdir == 0 || pdir == 2)
         pdir = 1
         pheadt = 4
         pbodyt = 3
         ptailt = 1
     //move snake head vertically
-    else if pads[0].held & BUTTON_DPAD == BUTTON_UP && pdir == 1 || pdir == 3
+    else if pads[0].held & BUTTON_DPAD == BUTTON_UP && (pdir == 1 || pdir == 3)
         pdir = 2
         pheadt = 9
         pbodyt = 8
         ptailt = 6
-    else if pads[0].held & BUTTON_DPAD == BUTTON_DOWN && pdir == 1 || pdir == 3
+    else if pads[0].held & BUTTON_DPAD == BUTTON_DOWN && (pdir == 1 || pdir == 3)
         pdir = 0
         pheadt = 7
         pbodyt = 8
@@ -343,14 +344,14 @@ fn move_player()
         psnpybi += 1
         if pdir != opdir
             pturn = true
-            if (opdir == 3 && pdir == 0) || (opdir == 0 && pdir == 3)
-                pcornt = 22
-            else if (opdir == 3 && pdir == 2) || (opdir == 2 && pdir == 3)
-                pcornt = 24
-            else if (opdir == 1 && pdir == 0) || (opdir == 0 && pdir == 1)
-                pcornt = 21
-            else if (opdir == 1 && pdir == 2) || (opdir == 2 && pdir == 1)
-                pcornt = 23
+            if (opdir == 3 && pdir == 0) || (opdir == 0 && pdir == 3)  //left down
+                pcornt = 10
+            else if (opdir == 3 && pdir == 2) || (opdir == 2 && pdir == 3)  //left up
+                pcornt = 12
+            else if (opdir == 1 && pdir == 0) || (opdir == 0 && pdir == 1)  //right down
+                pcornt = 11
+            else if (opdir == 1 && pdir == 2) || (opdir == 2 && pdir == 1)  //right up
+                pcornt = 13
         else
             pturn = false
 
@@ -384,8 +385,8 @@ fn move_rat()
     rvmul = (SF(score+1)>>5)
 
     //rat is always moving
-    rx += rvelx_table[rdir]
-    ry += rvely_table[rdir]
+    rx += rvelx_table[rdir] * rvmul
+    ry += rvely_table[rdir] * rvmul
 
     //wrap rat around screen
     if ry < 6
