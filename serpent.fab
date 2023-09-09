@@ -250,21 +250,22 @@ fn update_bkg()
     ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
     {PPUDATA}(ortele)
 
-    //draw the snake body on the background
-    ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
-    {PPUDATA}(ptile_table[pbodyt])
+    if opx.a != px.a || opy.a != py.a
+        //draw the snake body on the background
+        ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
+        {PPUDATA}(ptile_table[pbodyt])
 
-    //draw the snake head on the background
-    ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
-    {PPUDATA}(pheadt)
+        //draw the snake head on the background
+        ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
+        {PPUDATA}(pheadt)
 
-    //draw a blank space over the snake tail on the background
-    ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
-    {PPUDATA}(0)
+        //draw a blank space over the snake tail on the background
+        ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
+        {PPUDATA}(0)
 
-    //draw the snake tail on the background
-    ppu_set_addr($2000+(UU(psnpy[psnpybi-(plength-1)])<<5)+UU(psnpx[psnpxbi-(plength-1)]))
-    {PPUDATA}(optailt)
+        //draw the snake tail on the background
+        ppu_set_addr($2000+(UU(psnpy[psnpybi-(plength-1)])<<5)+UU(psnpx[psnpxbi-(plength-1)]))
+        {PPUDATA}(optailt)
 
     //draw the rat on the background
     ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
