@@ -4,7 +4,10 @@ ct SF[4] pvely_table = SF[4](0.1, 0, -0.1, 0)
 //                          rightdown, rightright, rightup, rightleft,
 //                          updown, upright, upup, upleft,
 //                          leftdown, leftright, leftup, leftleft)
-ct U[16] ptile_table = U[16](12, 16, 12, 17, 15, 7, 17, 7, 12, 14, 12, 15, 14, 7, 17, 7)
+ct U[16] ptile_table = U[16](12, 16, 12, 17, 
+                             15, 7, 17, 7, 
+                             12, 14, 12, 15, 
+                             14, 7, 16, 7)
 ct U[4] rtile_table = U[4](20, 19, 21, 18)
 ct SF[4] rvelx_table = SF[4](0, 0.1, 0, -0.1)
 ct SF[4] rvely_table = SF[4](0.1, 0, -0.1, 0)
@@ -279,12 +282,12 @@ fn update_bkg()
         ortele = rtele
 
 fn move_player()
-    
-    if optailt_counter == 0
-        optailt = ptailt
-        optailt_counter = plength+2
 
-    opdir = pdir
+    if (px.a != opx.a) || (py.a != opy.a)
+        if optailt_counter == 0
+            optailt = ptailt
+            optailt_counter = plength
+        opdir = pdir
 
     //move snake head horizontally
     if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && (pdir == 0 || pdir == 2)
