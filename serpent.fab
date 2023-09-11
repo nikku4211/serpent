@@ -26,16 +26,22 @@ vars /serp_vars
     U opdir = 1
     U plength = 5
     U pheadt = 4
+    UU pheadp = 0
     U pbodyt = 3
+    UU pbodyp = 0
     U ptailt = 1
+    UU ptailp = 0
+    UU optailp = 0
     U pcornt = 4
     U optailt_counter = 7
     U optailt = 5
     Bool pturn = false
     UF rx = 16
     UF ry = 15
+    UU rtp = 0
     UF orx = 16
     UF ory = 15
+    UU ortp = 0
     U rdir = 3
     SF rvmul = 1
     U rtele = 0
@@ -110,8 +116,12 @@ fn init_game_vars()
     
     plength = 5
     pheadt = 8
+    pheadp = 0
     pbodyt = 7
+    pbodyp = 0
     ptailt = 5
+    ptailp = 0
+    optailp = 0
     pcornt = 7
     
     optailt_counter = 7
@@ -119,8 +129,10 @@ fn init_game_vars()
     pturn = false
     rx = 16
     ry = 15
+    rtp = 0
     orx = 16
     ory = 15
+    ortp = 0
     
     rdir = 3
     rvmul = 1
@@ -185,13 +197,13 @@ mode game()
         move_player()
         move_rat()
         eat_check()
-        
         if score == 20
             goto mode win()
             : preserves
         if lost
             goto mode lose()
             : preserves
+        tail_check()
         nmi
 
 nmi win_nmi()
@@ -231,18 +243,29 @@ mode win()
 
         nmi
 
+fn tail_check()
+
+    //set positions before NMI
+    optailp = $2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength])
+    ptailp = $2000+(UU(psnpy[psnpybi-(plength-1)])<<5)+UU(psnpx[psnpxbi-(plength-1)])
+    pbodyp = $2000+(UU(opy.a)<<5)+UU(opx.a)
+    pheadp = $2000+(UU(py.a)<<5)+UU(px.a)
+
+    rtp = $2000+(UU(ry.a)<<5)+UU(rx.a)
+    ortp = $2000+(UU(ory.a)<<5)+UU(orx.a)
+
 fn update_bkg()   
 
     //read the snake head on the background
     fence
-    ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
+    ppu_set_addr(pheadp)
     pleat = {PPUDATA}()
     pleat = {PPUDATA}()
     fence
 
     //read the rat on the background
     fence
-    ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
+    ppu_set_addr(rtp)
     rtele = {PPUDATA}()
     rtele = {PPUDATA}()
     fence
@@ -250,28 +273,28 @@ fn update_bkg()
     ouro_check()
 
     //draw a black space over the old rat on the background
-    ppu_set_addr($2000+(UU(ory.a)<<5)+UU(orx.a))
+    ppu_set_addr(ortp)
     {PPUDATA}(ortele)
 
     if opx.a != px.a || opy.a != py.a
         //draw the snake body on the background
-        ppu_set_addr($2000+(UU(opy.a)<<5)+UU(opx.a))
+        ppu_set_addr(pbodyp)
         {PPUDATA}(ptile_table[pbodyt])
 
         //draw the snake head on the background
-        ppu_set_addr($2000+(UU(py.a)<<5)+UU(px.a))
+        ppu_set_addr(pheadp)
         {PPUDATA}(pheadt)
 
         //draw a blank space over the snake tail on the background
-        ppu_set_addr($2000+(UU(psnpy[psnpybi-plength])<<5)+UU(psnpx[psnpxbi-plength]))
+        ppu_set_addr(optailp)
         {PPUDATA}(0)
 
         //draw the snake tail on the background
-        ppu_set_addr($2000+(UU(psnpy[psnpybi-(plength-1)])<<5)+UU(psnpx[psnpxbi-(plength-1)]))
+        ppu_set_addr(ptailp)
         {PPUDATA}(optailt)
 
     //draw the rat on the background
-    ppu_set_addr($2000+(UU(ry.a)<<5)+UU(rx.a))
+    ppu_set_addr(rtp)
     {PPUDATA}(rtile_table[rdir])
 
     ppu_set_addr($2096)
