@@ -29,11 +29,13 @@ vars /serp_vars
     UU pheadp = 0
     U pbodyt = 3
     UU pbodyp = 0
-    U ptailt = 1
+    U[256] ptailt
+    U ptailtc = 5
+    U ptailtbi = 0
     UU ptailp = 0
     UU optailp = 0
     U pcornt = 4
-    U optailt_counter = 7
+    U optailt_counter = 5
     U optailt = 5
     Bool pturn = false
     UF rx = 16
@@ -90,15 +92,17 @@ fn init_arrays()
     //clear the entire 256-byte array...
     for U i = 0; i < 255; i += 1
         psnpx[i] = 0
-    for U i = 0; i < 255; i += 1
         psnpy[i] = 0
+        ptailt[i] = 5
     
     //...even the 256th byte
     psnpx[255] = 0
     psnpy[255] = 0
+    ptailt[255] = 5
 
     psnpx[0] = px.a
     psnpy[0] = py.a
+    ptailt[0] = 5
     psnpxbi = 1
     psnpybi = 1
 
@@ -119,12 +123,12 @@ fn init_game_vars()
     pheadp = 0
     pbodyt = 7
     pbodyp = 0
-    ptailt = 5
+    ptailtbi = plength
+    ptailtc = 5
     ptailp = 0
     optailp = 0
     pcornt = 7
-    
-    optailt_counter = 7
+    optailt_counter = 5
     optailt = 5
     pturn = false
     rx = 16
@@ -297,6 +301,7 @@ fn update_bkg()
     ppu_set_addr(rtp)
     {PPUDATA}(rtile_table[rdir])
 
+    //draw score
     ppu_set_addr($2096)
     {PPUDATA}(u_to_dd(score)[1] + $30)
     {PPUDATA}(u_to_dd(score)[0] + $30)
@@ -307,34 +312,34 @@ fn update_bkg()
 fn move_player()
 
     if (px.a != opx.a) || (py.a != opy.a)
-        if optailt_counter == 0
-            optailt = ptailt
-            optailt_counter = plength
+        optailt = ptailt[ptailtbi-(plength-3)]
         opdir = pdir
 
     //move snake head horizontally
     if pads[0].held & BUTTON_DPAD == BUTTON_LEFT && (pdir == 0 || pdir == 2)
         pdir = 3
         pheadt = 6
-        ptailt = 9
+        ptailtc = 9
     else if pads[0].held & BUTTON_DPAD == BUTTON_RIGHT && (pdir == 0 || pdir == 2)
         pdir = 1
         pheadt = 8
-        ptailt = 5
+        ptailtc = 5
     //move snake head vertically
     else if pads[0].held & BUTTON_DPAD == BUTTON_UP && (pdir == 1 || pdir == 3)
         pdir = 2
         pheadt = 13
-        ptailt = 10
+        ptailtc = 10
     else if pads[0].held & BUTTON_DPAD == BUTTON_DOWN && (pdir == 1 || pdir == 3)
         pdir = 0
         pheadt = 11
-        ptailt = 4
+        ptailtc = 4
 
+    //debug win button
     if pads[0].held & BUTTON_SELECT
         goto mode win()
         : preserves
 
+    //automatic body tile table
     pbodyt = (opdir<<2)+pdir
 
     opx = px
@@ -356,14 +361,15 @@ fn move_player()
         px = 2
 
     if (px.a != opx.a) || (py.a != opy.a)
-        if optailt_counter > 0
-            optailt_counter -= 1
         //store head position at turn
         psnpx[psnpxbi] = px.a
         psnpy[psnpybi] = py.a
         //increment snake buffer index
         psnpxbi += 1
         psnpybi += 1
+        //store current snake tail tile
+        ptailt[ptailtbi] = ptailtc
+        ptailtbi += 1
         if pdir != opdir
             pturn = true
             if (opdir == 3 && pdir == 0) || (opdir == 0 && pdir == 3)  //left down
@@ -421,7 +427,7 @@ fn move_rat()
     else if rx > 30
         rx = 2
     
-    if rtele == 1
+    if (rtele <= 17 && rtele >= 4)
         score += 1
         plength += 1
         puf.play_sfx(1)
