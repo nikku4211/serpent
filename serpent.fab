@@ -50,7 +50,7 @@ vars /serp_vars
     U ortele = 0
     U score = 0
     Bool lost = false
-    U shame_counter = 120
+    U shame_counter = 240
     U shame_scroll = 0
     UU wintro_counter = 384
     U chr_anim_counter = 12
@@ -412,6 +412,8 @@ fn move_rat()
     
     rvmul = (SF(score+1)>>5)
 
+    rdir = pdir
+
     //rat is always moving
     rx += rvelx_table[rdir] * rvmul
     ry += rvely_table[rdir] * rvmul
@@ -459,7 +461,7 @@ mode lose()
     {PPUCTRL}(PPUCTRL_NMI_ON)
 
     shame_scroll = 0
-    shame_counter = 120
+    shame_counter = 240
 
     ppu_reset_scroll(0, 0)
 
