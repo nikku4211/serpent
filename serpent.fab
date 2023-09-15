@@ -11,6 +11,8 @@ ct U[16] ptile_table = U[16](12, 16, 12, 17,
 ct U[4] rtile_table = U[4](20, 19, 21, 18)
 ct SF[4] rvelx_table = SF[4](0, 0.1, 0, -0.1)
 ct SF[4] rvely_table = SF[4](0.1, 0, -0.1, 0)
+ct U[4] rxcheck_table = U[4](0, 1, 0, -1)
+ct U[4] rycheck_table = U[4](1, 0, -1, 0)
 
 vars /serp_vars
     UF px = 12
@@ -41,6 +43,8 @@ vars /serp_vars
     UF rx = 16
     UF ry = 15
     UU rtp = 0
+    UU rstp = 0
+    U rseesnake = 0
     UF orx = 16
     UF ory = 15
     UU ortp = 0
@@ -134,6 +138,8 @@ fn init_game_vars()
     rx = 16
     ry = 15
     rtp = 0
+    rstp = 0
+    rseesnake = 0
     orx = 16
     ory = 15
     ortp = 0
@@ -258,6 +264,8 @@ fn tail_check()
     rtp = $2000+(UU(ry.a)<<5)+UU(rx.a)
     ortp = $2000+(UU(ory.a)<<5)+UU(orx.a)
 
+    rstp = $2000+(UU(ry.a+rycheck_table[rdir])<<5)+UU(rx.a+rxcheck_table[rdir])
+
 fn update_bkg()   
 
     //read the snake head on the background
@@ -272,6 +280,13 @@ fn update_bkg()
     ppu_set_addr(rtp)
     rtele = {PPUDATA}()
     rtele = {PPUDATA}()
+    fence
+
+    //read what the rat sees on the background
+    fence
+    ppu_set_addr(rstp)
+    rseesnake = {PPUDATA}()
+    rseesnake = {PPUDATA}()
     fence
 
     ouro_check()
@@ -335,10 +350,11 @@ fn move_player()
         ptailtc = 4
 
     //debug win button
+    /*
     if pads[0].held & BUTTON_SELECT
         goto mode win()
         : preserves
-
+    */
     //automatic body tile table
     pbodyt = (opdir<<2)+pdir
 
@@ -396,6 +412,10 @@ fn set_rat()
     rx += 2
     ry += 6
 
+    rvmul = (SF(score+1)>>4)
+
+    rdir = randb(3)
+
     if rtele == 1
         //put rat in random place
         rx = randb(27)
@@ -404,19 +424,17 @@ fn set_rat()
         //in bounds
         rx += 2
         ry += 6
-        
 
 fn move_rat()
     orx = rx
     ory = ry
-    
-    rvmul = (SF(score+1)>>5)
-
-    rdir = pdir
 
     //rat is always moving
     rx += rvelx_table[rdir] * rvmul
     ry += rvely_table[rdir] * rvmul
+
+    if (rseesnake <= 17 && rseesnake >= 4)
+        rdir = randb(3)
 
     //wrap rat around screen
     if ry < 6
